@@ -10,7 +10,7 @@ This is your **copy-paste cheat sheet**. Just follow these commands in order!
 
 ```powershell
 # Navigate to project folder (update path for your system)
-cd "c:\Users\91819\Desktop\Tor Browser\Internship_bot"
+cd "c:\Users\91819\Desktop\Internship_bot"
 
 # Install required packages
 pip install -r requirements.txt
@@ -536,7 +536,7 @@ Get-Content .env
 
 ```powershell
 # Make sure you're in project directory
-cd "c:\Users\91819\Desktop\Tor Browser\Internship_bot"
+cd "c:\Users\91819\Desktop\Internship_bot"
 ```
 
 **Issue: Module not found**

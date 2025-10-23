@@ -26,7 +26,7 @@ from binance.exceptions import BinanceAPIException
 from dotenv import load_dotenv
 from typing import Optional
 
-from logger_config import setup_logger
+from .logger_config import setup_logger
 
 # Initialize logger for this module
 logger = setup_logger('Config')

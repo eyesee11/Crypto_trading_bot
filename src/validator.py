@@ -27,8 +27,8 @@ import re
 from typing import Tuple, Optional
 from decimal import Decimal, ROUND_DOWN
 
-from logger_config import setup_logger
-from config import get_symbol_info, get_current_price, get_account_balance, MIN_ORDER_USD, MAX_PRICE_DEVIATION
+from .logger_config import setup_logger
+from .config import get_symbol_info, get_current_price, get_account_balance, MIN_ORDER_USD, MAX_ORDER_USD, MAX_PRICE_DEVIATION
 
 # Initialize logger
 logger = setup_logger('Validator')
@@ -225,8 +225,12 @@ def validate_price(symbol: str, price: float, order_type: str = "LIMIT") -> Tupl
     # ANALOGY: Like checking if sale price is realistic
     deviation = abs(price - current_price) / current_price
     
-    if deviation > MAX_PRICE_DEVIATION:
-        # Price is more than 10% away from market - likely a mistake
+    # For STOP_LIMIT orders, allow larger deviation (limit price compared to stop, not market)
+    # For regular LIMIT orders, keep strict validation
+    max_deviation = 0.30 if order_type == "STOP_LIMIT" else MAX_PRICE_DEVIATION  # 30% for stop-limit, 10% for limit
+    
+    if deviation > max_deviation:
+        # Price is too far away from market - likely a mistake
         percentage = deviation * 100
         return False, (
             f"Price ${price:,.2f} is {percentage:.1f}% away from market price ${current_price:,.2f}. "

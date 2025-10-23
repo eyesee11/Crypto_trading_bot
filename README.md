@@ -2,9 +2,16 @@
 
 ## 📖 Project Overview
 
-This is a comprehensive CLI-based trading bot for Binance USDT-M Futures that supports multiple order types with robust logging, validation, and error handling.
+This is a comprehensive **CLI & Web-based** trading bot for Binance USDT-M Futures that supports multiple order types with robust logging, validation, and error handling.
 
-> 📚 **New to trading bots?** Check out our detailed [SETUP_GUIDE.md](SETUP_GUIDE.md) for step-by-step instructions with explanations and practice scenarios!
+### 🎮 Two Ways to Use This Bot:
+
+| Interface                 | Best For                              | Guide                              |
+| ------------------------- | ------------------------------------- | ---------------------------------- |
+| 🖥️ **CLI (Command Line)** | Quick commands, scripting, automation | [SETUP_GUIDE.md](SETUP_GUIDE.md)   |
+| 🌐 **Web UI (Streamlit)** | Visual interface, charts, beginners   | [WEB_UI_GUIDE.md](WEB_UI_GUIDE.md) |
+
+> 💡 **Choose your path:** Start with whichever interface you're comfortable with - both use the same bot!
 
 ### 🎯 Real-Life Analogy
 
@@ -19,7 +26,74 @@ Think of this bot as your **personal stock broker assistant**:
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start - Choose Your Interface
+
+### 🎯 New Users - Start Here!
+
+**Pick one to begin:**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🌐 **WEB UI** (Recommended for Beginners)
+
+**Best for:**
+
+- ✅ Visual learners
+- ✅ First-time traders
+- ✅ Want to see charts
+- ✅ Prefer clicking buttons
+
+**Getting Started:**
+
+1. Complete [basic setup](#step-by-step-setup) below
+2. Follow **[WEB_UI_GUIDE.md](WEB_UI_GUIDE.md)** ← Complete tour!
+
+**Launch Command:**
+
+```bash
+streamlit run app.py
+```
+
+Then open: `http://localhost:8501`
+
+</td>
+<td width="50%" valign="top">
+
+### 🖥️ **CLI** (For Power Users)
+
+**Best for:**
+
+- ✅ Fast execution
+- ✅ Scripting & automation
+- ✅ Terminal enthusiasts
+- ✅ Remote servers (no GUI)
+
+**Getting Started:**
+
+1. Complete [basic setup](#step-by-step-setup) below
+2. Follow **[SETUP_GUIDE.md](SETUP_GUIDE.md)** ← Complete tutorial!
+
+**Example Commands:**
+
+```bash
+python main.py test
+python main.py balance
+python main.py market BTCUSDT BUY 0.01
+```
+
+</td>
+</tr>
+</table>
+
+> 🔄 **Can I use both?** Yes! They share the same configuration and can run simultaneously.
+
+---
+
+## 🔧 Step-by-Step Setup
+
+> ⚠️ **Complete this first** before choosing CLI or Web UI!
 
 ### Prerequisites
 
@@ -28,11 +102,7 @@ Think of this bot as your **personal stock broker assistant**:
 - **Binance Futures Testnet Account** (free, fake money)
 - **API Key and Secret** from Binance Testnet
 
-> 🆕 **First time setup?** Follow our comprehensive [SETUP_GUIDE.md](SETUP_GUIDE.md) with detailed explanations!
-
 ---
-
-## 🔧 Step-by-Step Setup
 
 ### Step 1: Get Binance Testnet API Keys
 
@@ -286,6 +356,66 @@ python src/orders/limit_orders.py
 ```
 
 **Note**: It's recommended to use `main.py` for better CLI experience and logging.
+
+---
+
+## 📚 Complete Guides & Documentation
+
+### 🎓 **Getting Started Guides**
+
+Choose based on your preferred interface:
+
+| Guide                                          | Description                                      | When to Use                |
+| ---------------------------------------------- | ------------------------------------------------ | -------------------------- |
+| **[SETUP_GUIDE.md](SETUP_GUIDE.md)**           | 📖 Complete CLI tutorial with practice scenarios | First-time CLI setup       |
+| **[WEB_UI_GUIDE.md](WEB_UI_GUIDE.md)**         | 🌐 Web interface tour - feature by feature       | First-time Web UI setup    |
+| **[QUICK_START.md](QUICK_START.md)**           | ⚡ Command reference (CLI only)                  | Quick CLI lookup           |
+| **[TRADING_CONCEPTS.md](TRADING_CONCEPTS.md)** | 💡 Trading basics with analogies                 | Learn trading fundamentals |
+
+### 📊 **Architecture & Summary**
+
+| Document                                     | Purpose                          |
+| -------------------------------------------- | -------------------------------- |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)**       | System design and code structure |
+| **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** | Project overview and evaluation  |
+
+---
+
+## 🎮 Usage Examples
+
+### 🌐 Web UI Mode
+
+**Launch:**
+
+```bash
+streamlit run app.py
+```
+
+**Then:**
+
+1. Open browser to `http://localhost:8501`
+2. Navigate using sidebar menu
+3. Follow [WEB_UI_GUIDE.md](WEB_UI_GUIDE.md) for feature tour
+
+**Features:**
+
+- 📊 Dashboard with balance and prices
+- 🛒 Forms for all order types
+- 📋 View and manage open orders
+- 📈 Interactive price charts
+- 🎨 Brutalist minimalist design
+
+---
+
+### 🖥️ CLI Mode
+
+All commands use: `python main.py <command> [arguments]`
+
+---
+
+## 📋 Complete Command Reference
+
+### Basic Orders
 
 ---
 
@@ -581,6 +711,39 @@ Use at your own risk. Not financial advice.
 
 ## 🎯 Next Steps
 
+### ✅ After Basic Setup:
+
+**Choose Your Path:**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🌐 **Web UI Path**
+
+1. ✅ Read [WEB_UI_GUIDE.md](WEB_UI_GUIDE.md)
+2. ✅ Complete the feature tour
+3. ✅ Practice with small orders
+4. ✅ Explore charts and dashboard
+5. ✅ Learn [TRADING_CONCEPTS.md](TRADING_CONCEPTS.md)
+
+</td>
+<td width="50%" valign="top">
+
+### 🖥️ **CLI Path**
+
+1. ✅ Read [SETUP_GUIDE.md](SETUP_GUIDE.md)
+2. ✅ Test basic commands
+3. ✅ Practice limit orders
+4. ✅ Try stop-limit orders
+5. ✅ Learn [TRADING_CONCEPTS.md](TRADING_CONCEPTS.md)
+
+</td>
+</tr>
+</table>
+
+### 🚀 Advanced:
+
 1. ✅ Set up Binance testnet account
 2. ✅ Install dependencies
 3. ✅ Configure `.env` file
@@ -589,5 +752,10 @@ Use at your own risk. Not financial advice.
 6. ✅ Explore advanced orders
 7. ✅ Review logs
 8. ✅ Customize for your needs
+9. 📚 Study both interfaces (CLI + Web UI)
+10. 🤖 Build your own strategies
+11. 🔄 Practice both CLI and Web UI
+12. 📊 Analyze with charts
+13. 📝 Review all documentation
 
 **Happy Trading! 🚀**

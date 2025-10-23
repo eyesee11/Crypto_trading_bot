@@ -275,8 +275,6 @@ python main.py price BTCUSDT
 
 ## 🎮 Step 6: Place Your First Order (Safe Test)
 
-**REAL-LIFE ANALOGY**: Like making your first purchase on a new e-commerce site - start small!
-
 ### 6.1 Check Current BTC Price
 
 ```powershell

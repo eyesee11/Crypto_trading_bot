@@ -109,9 +109,9 @@ from binance.exceptions import BinanceAPIException
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import get_client, get_current_price
-from validator import validate_order
-from logger_config import setup_logger, log_order, log_error, log_success
+from ..config import get_client, get_current_price
+from ..validator import validate_order
+from ..logger_config import setup_logger, log_order, log_error, log_success
 
 # Initialize logger
 logger = setup_logger('LimitOrders')

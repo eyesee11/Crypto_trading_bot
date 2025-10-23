@@ -66,9 +66,9 @@ from binance.exceptions import BinanceAPIException
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import get_client, get_current_price
-from validator import validate_order
-from logger_config import setup_logger, log_order, log_error, log_success
+from ..config import get_client, get_current_price
+from ..validator import validate_order
+from ..logger_config import setup_logger, log_order, log_error, log_success
 
 logger = setup_logger('StopLimitOrders')
 
@@ -139,6 +139,16 @@ def place_stop_limit_order(
             
             stop_diff = ((stop_price - current) / current) * 100
             logger.info(f"📊 Stop is {stop_diff:+.2f}% from current price")
+            
+            # Check limit price vs stop price (Binance requirement)
+            limit_stop_diff = abs((limit_price - stop_price) / stop_price) * 100
+            logger.info(f"📏 Limit price is {limit_stop_diff:.2f}% away from stop price")
+            
+            # Binance typically requires limit price within ~5% of stop price
+            if limit_stop_diff > 5:
+                logger.warning(f"⚠️  Limit price is {limit_stop_diff:.1f}% from stop price.")
+                logger.warning(f"⚠️  Binance may reject if difference is too large (typically >5%).")
+                logger.warning(f"💡 Suggestion: Try limit price closer to stop price (e.g., ${stop_price * 0.95:,.2f} to ${stop_price * 1.05:,.2f})")
             
             # Logic check
             if side == "SELL" and stop_price > current:

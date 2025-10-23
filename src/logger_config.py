@@ -30,11 +30,7 @@ from logging.handlers import RotatingFileHandler
 class ColoredFormatter(logging.Formatter):
     """
     Add colors to console output for better readability.
-    
-    ANALOGY: Like using different colored highlighters in a textbook:
-    - Yellow for important info
-    - Red for errors
-    - Green for success
+
     """
     
     # ANSI color codes (works in most terminals)
@@ -110,7 +106,8 @@ def setup_logger(name: str = 'BinanceBot', log_file: str = 'bot.log', level: str
     file_handler = RotatingFileHandler(
         log_file,
         maxBytes=10 * 1024 * 1024,  # 10 MB per file (like 100-page notebook)
-        backupCount=5                # Keep 5 old files (like keeping 5 old notebooks)
+        backupCount=5,               # Keep 5 old files (like keeping 5 old notebooks)
+        encoding='utf-8'             # UTF-8 encoding for emoji support on Windows
     )
     file_handler.setLevel(logging.DEBUG)  # Save EVERYTHING to file
     
