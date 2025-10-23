@@ -1,0 +1,35 @@
+# Core dependencies for Binance Futures Trading Bot
+
+# Official Binance API wrapper
+python-binance==1.0.19
+
+# Environment variable management
+python-dotenv==1.0.0
+
+# HTTP requests (fallback/debugging)
+requests==2.31.0
+
+# Data manipulation (for TWAP and Grid strategies)
+# Using flexible versions to get pre-built wheels
+pandas>=2.0.0
+
+# Numeric operations
+numpy>=1.24.0
+
+# Date/time utilities
+python-dateutil>=2.8.0
+
+# Colored terminal output (for better UX)
+colorama==0.4.6
+
+# Rich terminal formatting (optional, for beautiful CLI)
+rich==13.7.0
+
+# Type checking (development)
+typing-extensions==4.9.0
+
+# Streamlit UI Framework
+streamlit>=1.28.0
+
+# Plotly for interactive charts
+plotly>=5.18.0
