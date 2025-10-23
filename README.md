@@ -489,9 +489,9 @@ python main.py limit BTCUSDT SELL 0.01 35000
 
 ---
 
-### Advanced Orders (BONUS)
+### ⚡ Advanced Orders
 
-#### 3. Stop-Limit Order
+#### 3. Stop-Limit Order ✅ IMPLEMENTED
 
 ```bash
 # If price hits $29,000 (stop), place limit order at $28,900
@@ -500,7 +500,7 @@ python main.py stop-limit BTCUSDT SELL 0.01 29000 28900
 
 **What happens**: Like a two-stage safety net - trigger price activates the limit order.
 
-#### 4. OCO (One-Cancels-Other)
+#### 4. OCO (One-Cancels-Other) ✅ IMPLEMENTED
 
 ```bash
 # Take profit at $35,000 OR stop loss at $28,000
@@ -509,7 +509,9 @@ python main.py oco BTCUSDT SELL 0.01 35000 28000
 
 **What happens**: Like having two exit strategies - whichever happens first wins.
 
-#### 5. TWAP (Time-Weighted Average Price)
+**Real example**: You bought BTC at $108k, set OCO at $115k profit / $105k loss. If price hits $115k, profit order fills and stop-loss cancels automatically (you manually cancel remaining order).
+
+#### 5. TWAP (Time-Weighted Average Price) ✅ IMPLEMENTED
 
 ```bash
 # Buy 1 BTC over 60 minutes in 10 chunks
@@ -518,7 +520,9 @@ python main.py twap BTCUSDT BUY 1.0 --duration 60 --intervals 10
 
 **What happens**: Like dollar-cost averaging - spreads your order over time to avoid impacting price.
 
-#### 6. Grid Trading
+**Real example**: Instead of buying 0.5 BTC at once (might spike price), TWAP buys 0.05 BTC every 6 minutes for better average price.
+
+#### 6. Grid Trading 🚧 PLANNED
 
 ```bash
 # Create grid between $28,000-$32,000 with 5 levels
@@ -526,6 +530,8 @@ python main.py grid BTCUSDT 28000 32000 --grids 5 --quantity 0.01
 ```
 
 **What happens**: Like automated buy-low/sell-high - places multiple orders in a range.
+
+**Status**: Framework ready, implementation pending.
 
 ---
 

@@ -39,6 +39,8 @@ from src.config import test_connection, get_account_balance, get_current_price
 from src.orders.market_orders import place_market_order
 from src.orders.limit_orders import place_limit_order, get_open_orders, cancel_order
 from src.advanced.stop_limit import place_stop_limit_order
+from src.advanced.oco import place_oco_order
+from src.advanced.twap import execute_twap_strategy
 from src.logger_config import setup_logger
 
 # Initialize main logger
@@ -152,6 +154,37 @@ def command_stop_limit(args):
     return 0 if result else 1
 
 
+def command_oco(args):
+    """Place OCO (One-Cancels-Other) order"""
+    logger.info(f"Executing OCO order: {args.side} {args.quantity} {args.symbol}")
+    
+    result = place_oco_order(
+        symbol=args.symbol.upper(),
+        side=args.side.upper(),
+        quantity=args.quantity,
+        take_profit_price=args.take_profit,
+        stop_loss_price=args.stop_loss,
+        stop_limit_price=args.stop_limit
+    )
+    
+    return 0 if result else 1
+
+
+def command_twap(args):
+    """Execute TWAP strategy"""
+    logger.info(f"Executing TWAP strategy: {args.side} {args.quantity} {args.symbol}")
+    
+    result = execute_twap_strategy(
+        symbol=args.symbol.upper(),
+        side=args.side.upper(),
+        total_quantity=args.quantity,
+        duration_minutes=args.duration,
+        num_intervals=args.intervals
+    )
+    
+    return 0 if result else 1
+
+
 def command_orders(args):
     """List open orders"""
     symbol = args.symbol.upper() if args.symbol else None
@@ -204,7 +237,7 @@ def main():
         description='Binance Futures Trading Bot - CLI Interface',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
+BASIC COMMANDS:
   Test connection:
     python main.py test
   
@@ -220,15 +253,24 @@ Examples:
   Place limit order:
     python main.py limit BTCUSDT BUY 0.01 28000
   
-  Place stop-limit order:
-    python main.py stop-limit BTCUSDT SELL 0.01 28000 27900
-  
   List open orders:
     python main.py orders
     python main.py orders BTCUSDT
   
   Cancel order:
     python main.py cancel BTCUSDT 12345
+
+⚡ ADVANCED COMMANDS:
+  Stop-limit order (conditional):
+    python main.py stop-limit BTCUSDT SELL 0.01 28000 27900
+  
+  OCO order (one-cancels-other):
+    python main.py oco BTCUSDT SELL 0.01 35000 28000
+    # Take profit @ 35k OR stop loss @ 28k
+  
+  TWAP strategy (split large order over time):
+    python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
+    # Buy 0.5 BTC over 60 minutes in 10 chunks
 
 For detailed help on specific commands:
   python main.py <command> --help
@@ -278,7 +320,7 @@ Logs are saved to: bot.log
     parser_limit.set_defaults(func=command_limit)
     
     # Stop-limit order command
-    parser_stop = subparsers.add_parser('stop-limit', help='Place stop-limit order')
+    parser_stop = subparsers.add_parser('stop-limit', help='⚡ [ADVANCED] Place stop-limit order')
     parser_stop.add_argument('symbol', help='Trading symbol')
     parser_stop.add_argument('side', choices=['BUY', 'SELL', 'buy', 'sell'])
     parser_stop.add_argument('quantity', type=float, help='Quantity to trade')
@@ -287,6 +329,28 @@ Logs are saved to: bot.log
     parser_stop.add_argument('--reduce-only', action='store_true',
                             help='Only reduce existing position')
     parser_stop.set_defaults(func=command_stop_limit)
+    
+    # OCO order command (ADVANCED)
+    parser_oco = subparsers.add_parser('oco', help='⚡ [ADVANCED] Place OCO (One-Cancels-Other) order')
+    parser_oco.add_argument('symbol', help='Trading symbol')
+    parser_oco.add_argument('side', choices=['BUY', 'SELL', 'buy', 'sell'])
+    parser_oco.add_argument('quantity', type=float, help='Quantity to trade')
+    parser_oco.add_argument('take_profit', type=float, help='Take profit price')
+    parser_oco.add_argument('stop_loss', type=float, help='Stop loss price')
+    parser_oco.add_argument('--stop-limit', type=float, default=None,
+                           help='Stop limit price (optional)')
+    parser_oco.set_defaults(func=command_oco)
+    
+    # TWAP strategy command (ADVANCED)
+    parser_twap = subparsers.add_parser('twap', help='⚡ [ADVANCED] Execute TWAP strategy')
+    parser_twap.add_argument('symbol', help='Trading symbol')
+    parser_twap.add_argument('side', choices=['BUY', 'SELL', 'buy', 'sell'])
+    parser_twap.add_argument('quantity', type=float, help='Total quantity to trade')
+    parser_twap.add_argument('--duration', type=int, required=True,
+                            help='Duration in minutes')
+    parser_twap.add_argument('--intervals', type=int, required=True,
+                            help='Number of order intervals')
+    parser_twap.set_defaults(func=command_twap)
     
     # Orders command
     parser_orders = subparsers.add_parser('orders', help='List open orders')

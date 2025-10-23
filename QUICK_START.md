@@ -259,6 +259,26 @@ python main.py stop-limit BTCUSDT SELL 0.001 28000 27900
 python main.py stop-limit BTCUSDT BUY 0.001 31000 31100
 ```
 
+#### ⚡ OCO Orders (One-Cancels-Other)
+
+```powershell
+# Take profit at $35k OR stop loss at $28k (whichever happens first)
+python main.py oco BTCUSDT SELL 0.01 35000 28000
+
+# With custom stop-limit price
+python main.py oco BTCUSDT SELL 0.01 35000 28000 --stop-limit 27900
+```
+
+#### ⚡ TWAP Strategy (Time-Weighted Average Price)
+
+```powershell
+# Buy 0.5 BTC over 60 minutes in 10 chunks
+python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
+
+# Sell 1.0 BTC over 2 hours in 20 chunks
+python main.py twap BTCUSDT SELL 1.0 --duration 120 --intervals 20
+```
+
 ---
 
 ## 🎯 Real Trading Scenarios
@@ -329,6 +349,57 @@ python main.py limit BTCUSDT SELL 0.001 33000
 
 # Step 4: Monitor all orders
 python main.py orders BTCUSDT
+```
+
+---
+
+### ⚡ Scenario 5: OCO Protection (Advanced)
+
+```powershell
+# You bought BTC @ $108,000
+# Current price: $110,000
+# Want automated exit with profit OR loss protection
+
+# Step 1: Check current price
+python main.py price BTCUSDT
+
+# Step 2: Place OCO order (take profit at $115k OR stop loss at $105k)
+python main.py oco BTCUSDT SELL 0.01 115000 105000
+
+# Step 3: Monitor - when one fills, cancel the other
+python main.py orders BTCUSDT
+
+# Step 4: If take-profit fills at $115k, cancel stop-loss
+python main.py cancel BTCUSDT <stop_loss_order_id>
+```
+
+---
+
+### ⚡ Scenario 6: TWAP Large Purchase (Advanced)
+
+```powershell
+# Want to buy $50,000 worth of BTC without moving market
+# Current BTC: ~$110,000 (need ~0.45 BTC)
+
+# Step 1: Check current price
+python main.py price BTCUSDT
+
+# Step 2: Execute TWAP - buy 0.5 BTC over 1 hour in 10 chunks
+python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
+
+# What happens:
+# - Buys 0.05 BTC every 6 minutes
+# - Total time: 60 minutes
+# - Better average price than one large order
+# - Less market impact
+
+# Step 3: Wait and monitor terminal output
+# (Shows progress: "INTERVAL 3/10" etc.)
+
+# Step 4: Review final results
+# Terminal shows:
+# ✅ TWAP COMPLETED | 10 ORDERS EXECUTED
+# 📊 Average Price: $109,234.50
 ```
 
 ---

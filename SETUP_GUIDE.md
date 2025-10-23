@@ -557,13 +557,270 @@ pip install -r requirements.txt
 
 ---
 
+## ⚡ Step 10: Advanced Orders - OCO & TWAP
+
+### 🎯 OCO Orders (One-Cancels-Other)
+
+**REAL-LIFE ANALOGY**: Like setting two alarms - when one rings, automatically cancel the other.
+
+**What is OCO?**
+
+- Place TWO orders at once: Take Profit + Stop Loss
+- When ONE fills → Cancel the other automatically
+- Perfect for risk management
+
+**Example Scenario - Protect Your Position:**
+
+```powershell
+# You bought BTC @ $108,000
+# Current price: $109,000
+# Want to take profit at $115,000 OR limit loss at $105,000
+
+python main.py oco BTCUSDT SELL 0.01 115000 105000
+
+# What happens:
+# ✅ If price rises to $115,000 → Take profit fills, stop loss cancels
+# ❌ If price drops to $105,000 → Stop loss fills, take profit cancels
+```
+
+**Step-by-Step OCO Tutorial:**
+
+1. **Check current price:**
+
+   ```powershell
+   python main.py price BTCUSDT
+   # Example output: $109,000
+   ```
+
+2. **Place OCO order:**
+
+   ```powershell
+   python main.py oco BTCUSDT SELL 0.01 115000 105000
+
+   # Format: python main.py oco SYMBOL SIDE QUANTITY TAKE_PROFIT STOP_LOSS
+   # SELL 0.01 = Sell 0.01 BTC
+   # 115000 = Take profit at $115k (profit target)
+   # 105000 = Stop loss at $105k (loss limit)
+   ```
+
+3. **Check your orders:**
+
+   ```powershell
+   python main.py orders BTCUSDT
+
+   # You'll see TWO orders:
+   # 1. LIMIT order @ $115,000 (take profit)
+   # 2. STOP order @ $105,000 (stop loss)
+   ```
+
+4. **Monitor and manage:**
+   - When one order fills, **manually cancel** the other
+   - Use: `python main.py cancel BTCUSDT <order_id>`
+
+**OCO Best Practices:**
+
+✅ **For SELL OCO (closing long position):**
+
+- Take Profit > Current Price (sell higher for profit)
+- Stop Loss < Current Price (sell lower to limit loss)
+- Example: Current $109k, TP $115k, SL $105k
+
+✅ **For BUY OCO (closing short position):**
+
+- Take Profit < Current Price (buy lower for profit)
+- Stop Loss > Current Price (buy higher to limit loss)
+- Example: Current $109k, TP $105k, SL $115k
+
+**Common OCO Use Cases:**
+
+1. **Overnight Protection:**
+
+   ```powershell
+   # Set OCO before sleeping - covers both scenarios
+   python main.py oco BTCUSDT SELL 0.01 120000 100000
+   ```
+
+2. **News Event Trading:**
+
+   ```powershell
+   # Price might move sharply either way
+   python main.py oco BTCUSDT SELL 0.01 115000 105000
+   ```
+
+3. **Breakout Trading:**
+   ```powershell
+   # Exit if breakout fails OR succeeds
+   python main.py oco BTCUSDT SELL 0.01 125000 108000
+   ```
+
+---
+
+### 📊 TWAP Strategy (Time-Weighted Average Price)
+
+**REAL-LIFE ANALOGY**: Like buying groceries weekly instead of monthly - spreads cost over time, averages out price swings.
+
+**What is TWAP?**
+
+- Splits ONE large order into MANY small orders
+- Executes gradually over TIME
+- Reduces market impact
+- Better average price
+
+**Example Scenario - Large Purchase:**
+
+```powershell
+# Want to buy 0.5 BTC worth ~$55,000
+# Don't want to impact market with one big order
+# Solution: Split into 10 orders over 1 hour
+
+python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
+
+# What happens:
+# - Buys 0.05 BTC every 6 minutes
+# - Executes for 60 minutes total
+# - 10 separate orders
+# - Better average price than one large order
+```
+
+**Step-by-Step TWAP Tutorial:**
+
+1. **Calculate your needs:**
+
+   ```
+   Total to buy: 0.5 BTC
+   Time available: 60 minutes
+   How many chunks: 10 orders
+
+   Math:
+   - Each order = 0.5 ÷ 10 = 0.05 BTC
+   - Time between = 60 ÷ 10 = 6 minutes
+   ```
+
+2. **Execute TWAP:**
+
+   ```powershell
+   python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
+
+   # Format: python main.py twap SYMBOL SIDE QUANTITY --duration MINUTES --intervals NUMBER
+   ```
+
+3. **Monitor progress:**
+
+   - Bot will execute automatically
+   - Check terminal for progress updates
+   - Shows completed orders and average price
+   - Takes 60 minutes to complete (don't close terminal!)
+
+4. **View results:**
+   ```
+   Terminal will show:
+   ✅ TWAP COMPLETED | 10 ORDERS EXECUTED
+   📊 Average Price: $109,234.50
+   📦 Total Executed: 0.5 BTCUSDT
+   💰 Total Value: $54,617.25
+   ```
+
+**TWAP Parameters Explained:**
+
+- `--duration`: How long to spread orders (in minutes)
+
+  - Example: `--duration 30` = 30 minutes
+  - Range: 1-1440 minutes (24 hours)
+
+- `--intervals`: How many orders to split into
+  - Example: `--intervals 5` = 5 orders
+  - Range: 2-100 orders
+
+**TWAP Examples for Different Sizes:**
+
+**Small Position (Quick):**
+
+```powershell
+# Buy 0.1 BTC over 15 minutes in 3 chunks
+python main.py twap BTCUSDT BUY 0.1 --duration 15 --intervals 3
+# Each order: 0.033 BTC every 5 minutes
+```
+
+**Medium Position (Standard):**
+
+```powershell
+# Buy 0.5 BTC over 1 hour in 10 chunks
+python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
+# Each order: 0.05 BTC every 6 minutes
+```
+
+**Large Position (Gradual):**
+
+```powershell
+# Buy 2.0 BTC over 2 hours in 20 chunks
+python main.py twap BTCUSDT BUY 2.0 --duration 120 --intervals 20
+# Each order: 0.1 BTC every 6 minutes
+```
+
+**When to Use TWAP:**
+
+✅ **Good for:**
+
+- Large orders (would move market if done at once)
+- Volatile markets (average out swings)
+- Building position gradually
+- Dollar-cost averaging strategy
+
+❌ **Not good for:**
+
+- Urgent trades (TWAP takes time!)
+- Very small orders (overhead not worth it)
+- Strong trending markets (might miss the move)
+- Quick in-and-out trades
+
+**TWAP Best Practices:**
+
+1. **Don't interrupt:** Let TWAP complete - closing terminal cancels remaining orders
+2. **Monitor markets:** Watch for major news during execution
+3. **Choose intervals wisely:** More intervals = smoother but longer execution
+4. **Test first:** Start with small amounts to understand timing
+
+**TWAP vs Regular Order:**
+
+| Aspect            | Regular Order        | TWAP Strategy        |
+| ----------------- | -------------------- | -------------------- |
+| **Execution**     | Instant              | Gradual (over time)  |
+| **Market Impact** | High (large orders)  | Low (small chunks)   |
+| **Price**         | Whatever's available | Better average       |
+| **Complexity**    | Simple               | Moderate             |
+| **Time**          | Seconds              | Minutes to hours     |
+| **Best For**      | Small/urgent orders  | Large/planned orders |
+
+---
+
 ## 📚 Next Steps
 
 1. **Practice** with different order types
+
+   - Start with Market and Limit orders
+   - Move to Stop-Limit for risk management
+   - Try OCO for automated protection
+   - Experiment with TWAP for large orders
+
 2. **Review logs** after each order
-3. **Experiment** with stop-limits
+
+   - Check `bot.log` for detailed execution info
+   - Understand what happened and why
+
+3. **Master advanced strategies**
+
+   - OCO: Protect positions with dual exit points
+   - TWAP: Execute large orders smoothly
+   - Combine strategies for sophisticated trading
+
 4. **Learn** price action and technical analysis
+
+   - Understand when to use each order type
+   - Study market patterns and trends
+
 5. **Stay safe** - always use testnet for learning!
+   - Never risk real money while learning
+   - Test strategies thoroughly before going live
 
 ---
 

@@ -25,6 +25,8 @@ from src.config import (
 from src.orders.market_orders import place_market_order
 from src.orders.limit_orders import place_limit_order, get_open_orders, cancel_order
 from src.advanced.stop_limit import place_stop_limit_order
+from src.advanced.oco import place_oco_order
+from src.advanced.twap import execute_twap_strategy
 from src.logger_config import setup_logger
 
 # Page configurations
@@ -417,6 +419,175 @@ def show_stop_limit_form():
                 st.error("ORDER FAILED | CHECK LOGS")
 
 
+def show_oco_form():
+    """Form for placing OCO (One-Cancels-Other) orders"""
+    st.markdown("## ⚡ OCO ORDER (ONE-CANCELS-OTHER)")
+    st.markdown("*Advanced: Set both take-profit and stop-loss. When one fills, the other cancels automatically.*")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        symbol = st.selectbox("PAIR", ["BTCUSDT", "ETHUSDT", "BNBUSDT", "ADAUSDT"], key="oco_symbol")
+        side = st.radio("SIDE", ["SELL", "BUY"], horizontal=True, key="oco_side",
+                       help="Usually SELL for long positions, BUY for short positions")
+    
+    with col2:
+        quantity = st.number_input("QUANTITY", min_value=0.001, value=0.01,
+                                  step=0.001, format="%.3f", key="oco_quantity")
+        
+        current_price = get_current_price(symbol)
+        if current_price:
+            st.metric("CURRENT PRICE", f"${current_price:,.2f}")
+    
+    st.markdown("---")
+    st.markdown("### PRICE TARGETS")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🎯 TAKE PROFIT**")
+        take_profit = st.number_input("Price", min_value=0.01, value=35000.0,
+                                     step=100.0, format="%.2f", key="oco_tp",
+                                     help="Sell/Buy at this price for profit")
+        
+        if current_price and side == "SELL":
+            st.caption(f"({((take_profit - current_price) / current_price * 100):+.2f}% from market)")
+    
+    with col2:
+        st.markdown("**🛡️ STOP LOSS**")
+        stop_loss = st.number_input("Price", min_value=0.01, value=28000.0,
+                                   step=100.0, format="%.2f", key="oco_sl",
+                                   help="Sell/Buy at this price to limit losses")
+        
+        if current_price and side == "SELL":
+            st.caption(f"({((stop_loss - current_price) / current_price * 100):+.2f}% from market)")
+    
+    with st.expander("ADVANCED"):
+        stop_limit_price = st.number_input("Stop Limit Price (Optional)", 
+                                          min_value=0.01, value=0.0,
+                                          step=100.0, format="%.2f", key="oco_stop_limit",
+                                          help="Limit price for stop order. Leave at 0 for market stop.")
+    
+    st.markdown("---")
+    
+    # Preview
+    st.markdown("### PREVIEW")
+    st.info(f"""
+    **{side}** {quantity} {symbol}
+    
+    ✅ **If price reaches ${take_profit:,.2f}** → Take profit fills, stop loss cancels
+    
+    ❌ **If price reaches ${stop_loss:,.2f}** → Stop loss fills, take profit cancels
+    
+    ⚠️ Remember: When one order fills, you must manually cancel the other!
+    """)
+    
+    if st.button("PLACE OCO ORDER", type="primary", use_container_width=True):
+        with st.spinner("PLACING..."):
+            result = place_oco_order(
+                symbol, side, quantity, take_profit, stop_loss,
+                stop_limit_price if stop_limit_price > 0 else None
+            )
+            
+            if result:
+                tp_order, sl_order = result
+                st.success(f"OCO ORDERS PLACED!")
+                st.info(f"Take Profit ID: {tp_order.get('orderId')}")
+                st.info(f"Stop Loss ID: {sl_order.get('orderId')}")
+                st.warning("⚠️ When one fills, cancel the other manually!")
+            else:
+                st.error("ORDER FAILED | CHECK LOGS")
+
+
+def show_twap_form():
+    """Form for executing TWAP strategy"""
+    st.markdown("## ⚡ TWAP STRATEGY")
+    st.markdown("*Advanced: Split large order into smaller chunks executed over time for better average price.*")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        symbol = st.selectbox("PAIR", ["BTCUSDT", "ETHUSDT", "BNBUSDT", "ADAUSDT"], key="twap_symbol")
+        side = st.radio("SIDE", ["BUY", "SELL"], horizontal=True, key="twap_side")
+    
+    with col2:
+        total_quantity = st.number_input("TOTAL QUANTITY", min_value=0.001, value=0.1,
+                                        step=0.01, format="%.3f", key="twap_quantity")
+        
+        current_price = get_current_price(symbol)
+        if current_price:
+            total_value = total_quantity * current_price
+            st.metric("TOTAL VALUE", f"${total_value:,.2f}")
+    
+    st.markdown("---")
+    st.markdown("### TIME PARAMETERS")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        duration = st.number_input("DURATION (minutes)", min_value=1, value=60,
+                                  step=5, key="twap_duration",
+                                  help="How long to spread orders over")
+    
+    with col2:
+        intervals = st.number_input("NUMBER OF ORDERS", min_value=2, value=10,
+                                   step=1, key="twap_intervals",
+                                   help="How many chunks to split into")
+    
+    # Calculate preview
+    qty_per_order = total_quantity / intervals
+    interval_time = duration / intervals
+    
+    st.markdown("---")
+    st.markdown("### CALCULATION PREVIEW")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("QUANTITY PER ORDER", f"{qty_per_order:.8f}")
+    
+    with col2:
+        st.metric("INTERVAL TIME", f"{interval_time:.2f} min")
+    
+    with col3:
+        if current_price:
+            value_per_order = qty_per_order * current_price
+            st.metric("VALUE PER ORDER", f"${value_per_order:,.2f}")
+    
+    st.info(f"""
+    **Strategy Execution:**
+    
+    - Execute {intervals} orders
+    - Every {interval_time:.2f} minutes
+    - Each order: {qty_per_order:.8f} {symbol}
+    - Total duration: {duration} minutes
+    - Total quantity: {total_quantity} {symbol}
+    
+    ⏳ This will take approximately {duration} minutes to complete.
+    """)
+    
+    st.warning("⚠️ TWAP is blocking - bot will be busy during execution. Monitor progress in terminal.")
+    
+    if st.button("START TWAP STRATEGY", type="primary", use_container_width=True):
+        with st.spinner(f"EXECUTING TWAP STRATEGY... ({duration} minutes)"):
+            result = execute_twap_strategy(
+                symbol, side, total_quantity, duration, intervals
+            )
+            
+            if result and len(result) > 0:
+                st.success(f"TWAP COMPLETED | {len(result)} ORDERS EXECUTED")
+                
+                # Calculate average price
+                total_qty = sum(float(o.get('executedQty', 0)) for o in result)
+                total_cost = sum(float(o.get('executedQty', 0)) * float(o.get('avgPrice', 0)) for o in result)
+                avg_price = total_cost / total_qty if total_qty > 0 else 0
+                
+                st.metric("AVERAGE EXECUTION PRICE", f"${avg_price:,.2f}")
+                st.info(f"Total Executed: {total_qty:.8f} {symbol}")
+            else:
+                st.error("TWAP FAILED | CHECK LOGS")
+
+
 def show_open_orders():
     """Display and manage open orders"""
     st.markdown("## OPEN ORDERS")
@@ -544,7 +715,11 @@ def main():
             "DASHBOARD",
             "MARKET ORDER",
             "LIMIT ORDER",
+            "━━━ ⚡ ADVANCED ━━━",
             "STOP-LIMIT",
+            "OCO ORDER",
+            "TWAP STRATEGY",
+            "━━━━━━━━━━━━━",
             "OPEN ORDERS",
             "CHARTS",
             "HELP"
@@ -583,8 +758,19 @@ def main():
     elif page == "LIMIT ORDER":
         show_limit_order_form()
     
+    elif page == "━━━ ⚡ ADVANCED ━━━" or page == "━━━━━━━━━━━━━":
+        # Separator pages - redirect to dashboard
+        st.markdown("# SELECT AN ORDER TYPE")
+        st.info("Choose from the menu on the left")
+    
     elif page == "STOP-LIMIT":
         show_stop_limit_form()
+    
+    elif page == "OCO ORDER":
+        show_oco_form()
+    
+    elif page == "TWAP STRATEGY":
+        show_twap_form()
     
     elif page == "OPEN ORDERS":
         show_open_orders()
