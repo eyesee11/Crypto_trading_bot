@@ -27,6 +27,7 @@ from src.orders.limit_orders import place_limit_order, get_open_orders, cancel_o
 from src.advanced.stop_limit import place_stop_limit_order
 from src.advanced.oco import place_oco_order
 from src.advanced.twap import execute_twap_strategy
+from src.advanced.grid_trading import setup_grid_trading, cancel_all_grid_orders
 from src.logger_config import setup_logger
 
 # Page configurations
@@ -588,6 +589,150 @@ def show_twap_form():
                 st.error("TWAP FAILED | CHECK LOGS")
 
 
+def show_grid_form():
+    """Form for Grid Trading strategy"""
+    st.markdown("## ⚡ GRID TRADING")
+    st.markdown("*Advanced: Automated buy low/sell high strategy in a price range.*")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        symbol = st.selectbox("PAIR", ["BTCUSDT", "ETHUSDT", "BNBUSDT", "ADAUSDT"], key="grid_symbol")
+        
+        current_price = get_current_price(symbol)
+        if current_price:
+            st.metric("CURRENT PRICE", f"${current_price:,.2f}")
+    
+    with col2:
+        quantity_per_grid = st.number_input("QUANTITY PER GRID", min_value=0.001, value=0.01,
+                                           step=0.001, format="%.3f", key="grid_quantity",
+                                           help="Amount for each grid level")
+    
+    st.markdown("---")
+    st.markdown("### GRID RANGE")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        lower_price = st.number_input("LOWER PRICE", min_value=0.01, value=100000.0,
+                                     step=1000.0, format="%.2f", key="grid_lower",
+                                     help="Bottom of grid range")
+    
+    with col2:
+        upper_price = st.number_input("UPPER PRICE", min_value=0.01, value=120000.0,
+                                     step=1000.0, format="%.2f", key="grid_upper",
+                                     help="Top of grid range")
+    
+    with col3:
+        num_grids = st.number_input("GRID LEVELS", min_value=2, max_value=20, value=5,
+                                   step=1, key="grid_levels",
+                                   help="Number of price levels")
+    
+    # Calculate preview
+    if lower_price < upper_price and num_grids >= 2:
+        grid_spacing = (upper_price - lower_price) / (num_grids - 1)
+        levels = [lower_price + (grid_spacing * i) for i in range(num_grids)]
+        
+        st.markdown("---")
+        st.markdown("### GRID LEVELS PREVIEW")
+        
+        # Show levels in a table
+        level_data = []
+        for i, level in enumerate(levels, 1):
+            if current_price:
+                if level < current_price:
+                    action = "BUY"
+                    distance = ((current_price - level) / current_price) * 100
+                elif level > current_price:
+                    action = "SELL"
+                    distance = ((level - current_price) / current_price) * 100
+                else:
+                    action = "CURRENT"
+                    distance = 0
+                
+                level_data.append({
+                    "Level": i,
+                    "Price": f"${level:,.2f}",
+                    "Action": action,
+                    "Distance": f"{distance:.2f}%"
+                })
+            else:
+                level_data.append({
+                    "Level": i,
+                    "Price": f"${level:,.2f}",
+                    "Action": "?"
+                })
+        
+        df = pd.DataFrame(level_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # Calculate stats
+        if current_price:
+            buy_levels = [l for l in levels if l < current_price]
+            sell_levels = [l for l in levels if l > current_price]
+            
+            st.markdown("---")
+            st.markdown("### CAPITAL REQUIRED")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                buy_capital = sum(quantity_per_grid * level for level in buy_levels)
+                st.metric("FOR BUY ORDERS", f"${buy_capital:,.2f} USDT")
+                st.caption(f"{len(buy_levels)} BUY orders")
+            
+            with col2:
+                sell_capital = quantity_per_grid * len(sell_levels)
+                st.metric("FOR SELL ORDERS", f"{sell_capital:.3f} {symbol.replace('USDT', '')}")
+                st.caption(f"{len(sell_levels)} SELL orders")
+            
+            st.info(f"""
+            **Grid Strategy:**
+            
+            - Price range: ${lower_price:,.2f} - ${upper_price:,.2f}
+            - Grid spacing: ${grid_spacing:,.2f}
+            - Total levels: {num_grids}
+            - BUY orders: {len(buy_levels)} (below current price)
+            - SELL orders: {len(sell_levels)} (above current price)
+            
+            💡 As price moves up/down, orders fill automatically.
+            Profit comes from price oscillations in the range!
+            """)
+        
+        st.warning("⚠️ Grid Trading locks capital until orders fill. Make sure you have sufficient balance!")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("SETUP GRID", type="primary", use_container_width=True):
+                with st.spinner("SETTING UP GRID..."):
+                    result = setup_grid_trading(
+                        symbol, lower_price, upper_price, num_grids, quantity_per_grid
+                    )
+                    
+                    if result:
+                        buy_orders = result.get('buy_orders', [])
+                        sell_orders = result.get('sell_orders', [])
+                        
+                        st.success(f"GRID ACTIVATED!")
+                        st.info(f"BUY orders: {len(buy_orders)}")
+                        st.info(f"SELL orders: {len(sell_orders)}")
+                        st.info(f"Total: {len(buy_orders) + len(sell_orders)} orders placed")
+                    else:
+                        st.error("GRID SETUP FAILED | CHECK LOGS")
+        
+        with col2:
+            if st.button("CANCEL ALL GRID ORDERS", type="secondary", use_container_width=True):
+                with st.spinner("CANCELING..."):
+                    if cancel_all_grid_orders(symbol):
+                        st.success(f"ALL GRID ORDERS CANCELED FOR {symbol}")
+                        st.rerun()
+                    else:
+                        st.error("CANCEL FAILED")
+    else:
+        st.error("Invalid grid parameters: Upper price must be > Lower price, and need at least 2 grid levels")
+
+
 def show_open_orders():
     """Display and manage open orders"""
     st.markdown("## OPEN ORDERS")
@@ -719,6 +864,7 @@ def main():
             "STOP-LIMIT",
             "OCO ORDER",
             "TWAP STRATEGY",
+            "GRID TRADING",
             "━━━━━━━━━━━━━",
             "OPEN ORDERS",
             "CHARTS",
@@ -771,6 +917,9 @@ def main():
     
     elif page == "TWAP STRATEGY":
         show_twap_form()
+    
+    elif page == "GRID TRADING":
+        show_grid_form()
     
     elif page == "OPEN ORDERS":
         show_open_orders()

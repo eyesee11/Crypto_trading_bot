@@ -41,6 +41,7 @@ from src.orders.limit_orders import place_limit_order, get_open_orders, cancel_o
 from src.advanced.stop_limit import place_stop_limit_order
 from src.advanced.oco import place_oco_order
 from src.advanced.twap import execute_twap_strategy
+from src.advanced.grid_trading import setup_grid_trading, cancel_all_grid_orders
 from src.logger_config import setup_logger
 
 # Initialize main logger
@@ -185,6 +186,26 @@ def command_twap(args):
     return 0 if result else 1
 
 
+def command_grid(args):
+    """Execute Grid Trading strategy"""
+    if args.cancel:
+        logger.info(f"Canceling all grid orders for {args.symbol}")
+        result = cancel_all_grid_orders(args.symbol.upper())
+        return 0 if result else 1
+    
+    logger.info(f"Setting up grid trading for {args.symbol}")
+    
+    result = setup_grid_trading(
+        symbol=args.symbol.upper(),
+        lower_price=args.lower_price,
+        upper_price=args.upper_price,
+        num_grids=args.grids,
+        quantity_per_grid=args.quantity
+    )
+    
+    return 0 if result else 1
+
+
 def command_orders(args):
     """List open orders"""
     symbol = args.symbol.upper() if args.symbol else None
@@ -271,6 +292,13 @@ BASIC COMMANDS:
   TWAP strategy (split large order over time):
     python main.py twap BTCUSDT BUY 0.5 --duration 60 --intervals 10
     # Buy 0.5 BTC over 60 minutes in 10 chunks
+  
+  Grid Trading (automated buy low/sell high):
+    python main.py grid BTCUSDT 100000 120000 --grids 5 --quantity 0.01
+    # Place orders at 5 levels between $100k-$120k
+    
+    python main.py grid BTCUSDT --cancel
+    # Cancel all grid orders for BTCUSDT
 
 For detailed help on specific commands:
   python main.py <command> --help
@@ -351,6 +379,17 @@ Logs are saved to: bot.log
     parser_twap.add_argument('--intervals', type=int, required=True,
                             help='Number of order intervals')
     parser_twap.set_defaults(func=command_twap)
+    
+    # Grid Trading command (ADVANCED)
+    parser_grid = subparsers.add_parser('grid', help='⚡ [ADVANCED] Setup Grid Trading strategy')
+    parser_grid.add_argument('symbol', help='Trading symbol')
+    parser_grid.add_argument('lower_price', nargs='?', type=float, help='Lower bound of grid range')
+    parser_grid.add_argument('upper_price', nargs='?', type=float, help='Upper bound of grid range')
+    parser_grid.add_argument('--grids', type=int, help='Number of grid levels')
+    parser_grid.add_argument('--quantity', type=float, help='Quantity per grid level')
+    parser_grid.add_argument('--cancel', action='store_true',
+                            help='Cancel all grid orders for symbol')
+    parser_grid.set_defaults(func=command_grid)
     
     # Orders command
     parser_orders = subparsers.add_parser('orders', help='List open orders')

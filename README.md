@@ -522,16 +522,19 @@ python main.py twap BTCUSDT BUY 1.0 --duration 60 --intervals 10
 
 **Real example**: Instead of buying 0.5 BTC at once (might spike price), TWAP buys 0.05 BTC every 6 minutes for better average price.
 
-#### 6. Grid Trading 🚧 PLANNED
+#### 6. Grid Trading ✅ IMPLEMENTED
 
 ```bash
-# Create grid between $28,000-$32,000 with 5 levels
-python main.py grid BTCUSDT 28000 32000 --grids 5 --quantity 0.01
+# Create grid between $105,000-$115,000 with 5 levels
+python main.py grid BTCUSDT 105000 115000 --grids 5 --quantity 0.001
+
+# Cancel all grid orders
+python main.py grid BTCUSDT --cancel
 ```
 
-**What happens**: Like automated buy-low/sell-high - places multiple orders in a range.
+**What happens**: Like automated buy-low/sell-high - places multiple orders across a price range to profit from oscillations.
 
-**Status**: Framework ready, implementation pending.
+**Real example**: Creates a "fishing net" of orders - BUY orders below current price, SELL orders above. As price bounces up and down, orders fill automatically generating profits 24/7.
 
 ---
 

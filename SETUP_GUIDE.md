@@ -793,6 +793,277 @@ python main.py twap BTCUSDT BUY 2.0 --duration 120 --intervals 20
 
 ---
 
+### 📐 Grid Trading (Automated Range Trading)
+
+**REAL-LIFE ANALOGY**: Like a fishing net spread across the ocean - catches profits as price swims up and down through the grid.
+
+**What is Grid Trading?**
+
+- Places BUY and SELL orders at multiple price levels
+- Forms a "grid" of orders across a price range
+- Automatically buys low and sells high as price oscillates
+- Works 24/7 without monitoring
+
+**Example Scenario - Range-Bound Market:**
+
+```powershell
+# BTC is trading between $100,000 - $120,000 (sideways)
+# Want to profit from price oscillations
+
+python main.py grid BTCUSDT 100000 120000 --grids 5 --quantity 0.01
+
+# What happens:
+# Grid creates 5 levels: $100k, $105k, $110k, $115k, $120k
+# Current price: $110k
+# BUY orders placed at: $100k, $105k (below current)
+# SELL orders placed at: $115k, $120k (above current)
+
+# As price moves:
+# Price drops to $105k → BUY fills (bought at $105k)
+# Price rises to $115k → SELL fills (sold at $115k)
+# Profit: $10k per 0.01 BTC = $100 profit!
+```
+
+**Step-by-Step Grid Tutorial:**
+
+1. **Identify the range:**
+
+   ```powershell
+   # Check current price
+   python main.py price BTCUSDT
+   # Example: $110,000
+
+   # Look at chart - BTC bouncing between $100k-$120k
+   # That's your grid range!
+   ```
+
+2. **Calculate grid parameters:**
+
+   ```
+   Range: $100,000 - $120,000 ($20,000 range)
+   Grid levels: 5
+   Spacing: $20,000 ÷ 4 gaps = $5,000 per level
+
+   Levels will be:
+   - Level 1: $100,000 (BUY)
+   - Level 2: $105,000 (BUY)
+   - Level 3: $110,000 (current price)
+   - Level 4: $115,000 (SELL)
+   - Level 5: $120,000 (SELL)
+   ```
+
+3. **Setup grid:**
+
+   ```powershell
+   python main.py grid BTCUSDT 100000 120000 --grids 5 --quantity 0.01
+
+   # Format: python main.py grid SYMBOL LOWER_PRICE UPPER_PRICE --grids NUM --quantity AMT
+   ```
+
+4. **Monitor grid:**
+
+   ```powershell
+   # Check all grid orders
+   python main.py orders BTCUSDT
+
+   # You'll see multiple orders at different prices
+   ```
+
+5. **Let it run:**
+
+   ```
+   Grid is now active!
+   - As price moves up → SELL orders fill
+   - As price moves down → BUY orders fill
+   - Each cycle generates profit
+   - Works automatically 24/7
+   ```
+
+6. **Cancel grid (when done):**
+
+   ```powershell
+   # Cancel all grid orders at once
+   python main.py grid BTCUSDT --cancel
+   ```
+
+**Grid Trading Parameters Explained:**
+
+- `LOWER_PRICE`: Bottom of the grid range
+
+  - Example: `100000` = $100,000
+  - Should be below current price
+
+- `UPPER_PRICE`: Top of the grid range
+
+  - Example: `120000` = $120,000
+  - Should be above current price
+
+- `--grids`: Number of price levels in the grid
+
+  - Example: `--grids 5` = 5 price levels
+  - Range: 2-20 levels
+  - More levels = more opportunities but more capital needed
+
+- `--quantity`: Amount per grid level
+  - Example: `--quantity 0.01` = 0.01 BTC per order
+  - All grid orders use same quantity
+
+**Grid Examples for Different Scenarios:**
+
+**Tight Range (High Frequency):**
+
+```powershell
+# BTC in $2k range, many small trades
+python main.py grid BTCUSDT 108000 110000 --grids 10 --quantity 0.005
+# 10 levels in $2k range = $200 spacing
+# Small quantities, frequent fills
+```
+
+**Wide Range (Low Frequency):**
+
+```powershell
+# BTC in $40k range, fewer larger trades
+python main.py grid BTCUSDT 90000 130000 --grids 5 --quantity 0.02
+# 5 levels in $40k range = $10k spacing
+# Larger quantities, less frequent fills
+```
+
+**Standard Grid (Balanced):**
+
+```powershell
+# BTC in $20k range, balanced approach
+python main.py grid BTCUSDT 100000 120000 --grids 5 --quantity 0.01
+# 5 levels in $20k range = $5k spacing
+# Moderate quantities and frequency
+```
+
+**Capital Requirements:**
+
+Grid trading requires capital for all orders. Example:
+
+```
+Grid: $100k - $120k, 5 levels, 0.01 BTC each
+Current price: $110k
+
+BUY orders (below current):
+- $100k × 0.01 BTC = $1,000
+- $105k × 0.01 BTC = $1,050
+Total: $2,050 USDT needed
+
+SELL orders (above current):
+- Need to have: 0.02 BTC (2 × 0.01)
+Total: 0.02 BTC needed
+
+Total capital: $2,050 USDT + 0.02 BTC
+```
+
+**When to Use Grid Trading:**
+
+✅ **Good for:**
+
+- Sideways/ranging markets (price bounces in range)
+- High volatility (lots of up/down movement)
+- Defined support/resistance levels
+- Passive income strategy
+- 24/7 automated trading
+
+❌ **Not good for:**
+
+- Strong trending markets (price going one direction)
+- Low volatility (price not moving)
+- Near major news events (might break range)
+- Insufficient capital
+- Very tight ranges (fees eat profits)
+
+**Grid Trading Best Practices:**
+
+1. **Choose the right range:**
+
+   - Study recent price action
+   - Identify support/resistance
+   - Allow room for movement
+   - Don't make range too tight
+
+2. **Calculate capital:**
+
+   - Ensure you have enough for all orders
+   - Reserve extra for BUY orders (lower levels)
+   - Keep some USDT free for opportunities
+
+3. **Monitor the grid:**
+
+   - Check filled orders periodically
+   - Adjust if price breaks out of range
+   - Re-setup grid in new range if needed
+
+4. **Manage risk:**
+   - Start small to test the strategy
+   - Don't use entire balance
+   - Have stop-loss plan if range breaks
+   - Monitor for trend changes
+
+**Grid Trading Profit Calculation:**
+
+```
+Example cycle:
+1. BUY @ $105,000 (order fills)
+2. Price rises
+3. SELL @ $115,000 (order fills)
+
+Profit per cycle:
+- Profit = ($115k - $105k) × 0.01 BTC
+- Profit = $10k × 0.01 = $100
+
+If price oscillates 5 times in a day:
+- Daily profit = $100 × 5 = $500
+- Monthly profit = $500 × 30 = $15,000
+
+(Minus fees: ~$0.02 per trade × 10 trades = $0.20)
+Net profit: ~$499.80 per day
+```
+
+**Troubleshooting Grid Trading:**
+
+**Issue: "Not enough capital"**
+
+```
+Solution:
+1. Reduce number of grid levels
+2. Reduce quantity per grid
+3. Narrow the price range
+```
+
+**Issue: "Orders not filling"**
+
+```
+Solution:
+1. Price might be outside your range
+2. Range might be too wide
+3. Adjust range to include current price
+```
+
+**Issue: "Price broke out of range"**
+
+```
+Solution:
+1. Cancel current grid: python main.py grid BTCUSDT --cancel
+2. Analyze new range
+3. Setup new grid in new range
+```
+
+**Grid vs Manual Trading:**
+
+| Aspect            | Manual Trading       | Grid Trading            |
+| ----------------- | -------------------- | ----------------------- |
+| **Time Required** | Constant monitoring  | Set and forget          |
+| **Emotions**      | Can affect decisions | Systematic, no emotions |
+| **Opportunities** | Might miss some      | Catches all in range    |
+| **Complexity**    | Simple               | Moderate setup          |
+| **Best For**      | Active traders       | Passive traders         |
+| **Profitability** | Varies               | Consistent in range     |
+
+---
+
 ## 📚 Next Steps
 
 1. **Practice** with different order types
@@ -801,6 +1072,7 @@ python main.py twap BTCUSDT BUY 2.0 --duration 120 --intervals 20
    - Move to Stop-Limit for risk management
    - Try OCO for automated protection
    - Experiment with TWAP for large orders
+   - Master Grid Trading for passive income
 
 2. **Review logs** after each order
 
@@ -811,6 +1083,7 @@ python main.py twap BTCUSDT BUY 2.0 --duration 120 --intervals 20
 
    - OCO: Protect positions with dual exit points
    - TWAP: Execute large orders smoothly
+   - Grid Trading: Automate profits in ranging markets
    - Combine strategies for sophisticated trading
 
 4. **Learn** price action and technical analysis
